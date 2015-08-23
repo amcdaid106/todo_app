@@ -1,1 +1,3 @@
-# todo_app
+# Todo app
+
+Check it out, yo!
