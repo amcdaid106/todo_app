@@ -19,11 +19,18 @@ var allItemsCollection = new ItemsCollection([
 
 var ItemView = Backbone.View.extend({
     tagName: 'li',
-    template: _.template('<%= item %> | <button>X</button> | <button>Edit</button> | <button>√</button>'),
+    template: _.template('<%= item %> | <button class="delete">X</button> | <button>Edit</button> | <button>√</button>'),
     render: function() {
         var attrs = this.model.attributes;
         var templateHtml = this.template(attrs);
         this.$el.html(templateHtml);
+    },
+    events: {
+        'click .delete': 'deleteItem'
+    },
+    deleteItem: function(e) {
+        this.model.collection.remove(this.model);
+        this.remove();
     }
 });
 
@@ -42,7 +49,9 @@ allItemsCollection.forEach(createItemView);
 allItemsCollection.on('add', createItemView);
 
 var $textarea = $('textarea');
+
 $textarea.focus();
+
 $textarea.on('keyup', function(e) {
     if (e.which === 13) {
         var newItem = $textarea.val().trim();
@@ -52,3 +61,5 @@ $textarea.on('keyup', function(e) {
         $textarea.val('');
     }
 });
+
+
