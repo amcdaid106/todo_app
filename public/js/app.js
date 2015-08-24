@@ -12,25 +12,45 @@ var ItemsCollection = Backbone.Collection.extend({
 var allItemsCollection = new ItemsCollection([
     { id: 0, item: "Walk the dog", isDone: false },
     { id: 1, item: "Schedule doctor's appointment", isDone: false },
-    { id: 2, item: "Pee", isDone: false },
+    { id: 2, item: "Pee", isDone: true },
     { id: 3, item: "Peel potatoes", isDone: false },
     { id: 4, item: "Shave legs", isDone: false }
 ]);
 
 var ItemView = Backbone.View.extend({
     tagName: 'li',
-    template: _.template('<%= item %> | <button class="delete">X</button> | <button>Edit</button> | <button>√</button>'),
+    template: _.template('<%= item %> | <button class="delete">X</button> | <button class="edit">Edit</button> | <button class="done">√</button>'),
     render: function() {
         var attrs = this.model.attributes;
         var templateHtml = this.template(attrs);
         this.$el.html(templateHtml);
+
+        var isDone = this.model.get('isDone');
+        if (isDone) {
+            this.$el.css('text-decoration', 'line-through');
+        } else {
+            this.$el.css('text-decoration', 'none');
+        }
     },
     events: {
-        'click .delete': 'deleteItem'
+        'click .delete': 'deleteItem',
+        'click .edit': 'editItem',
+        'click .done': 'itemDone'
     },
     deleteItem: function(e) {
         this.model.collection.remove(this.model);
         this.remove();
+    },
+    editItem: function(e) {
+        var item = this.model.get('item');
+        var newItem = prompt('Edit item below', item);
+        this.model.set('item', newItem);
+        this.render();
+    },
+    itemDone: function(e) {
+        var isDone = this.model.get('isDone');
+        this.model.set('isDone', !isDone);
+        this.render();
     }
 });
 
