@@ -6,16 +6,12 @@ var ItemModel = Backbone.Model.extend({
 });
 
 var ItemsCollection = Backbone.Collection.extend({
-    model: ItemModel
+    model: ItemModel,
+    url: '/items'
 });
 
-var allItemsCollection = new ItemsCollection([
-    { id: 0, item: "Walk the dog", isDone: false },
-    { id: 1, item: "Schedule doctor's appointment", isDone: false },
-    { id: 2, item: "Pee", isDone: true },
-    { id: 3, item: "Peel potatoes", isDone: false },
-    { id: 4, item: "Shave legs", isDone: false }
-]);
+var allItemsCollection = new ItemsCollection();
+allItemsCollection.fetch();
 
 var ItemView = Backbone.View.extend({
     tagName: 'li',
@@ -38,19 +34,22 @@ var ItemView = Backbone.View.extend({
         'click .done': 'itemDone'
     },
     deleteItem: function(e) {
-        this.model.collection.remove(this.model);
+        this.model.destroy();
         this.remove();
     },
     editItem: function(e) {
         var item = this.model.get('item');
         var newItem = prompt('Edit item below', item);
-        this.model.set('item', newItem);
-        this.render();
+        this.update('item', newItem);
     },
     itemDone: function(e) {
         var isDone = this.model.get('isDone');
-        this.model.set('isDone', !isDone);
-        this.render();
+        this.update('isDone', !isDone);
+    },
+    update: function(key, val) {
+        this.model.set(key, val);
+        this.model.sync('update', this.model, {silent: true});
+        this.render();        
     }
 });
 
@@ -60,22 +59,29 @@ function createItemView(itemModel) {
     var itemView = new ItemView({
         model: itemModel
     });
-    $items.append(itemView.$el);
+    $items.append(itemView.el);
     itemView.render();
 }
 
-allItemsCollection.forEach(createItemView);
+allItemsCollection.on('sync', function(model, response, options) {
+    if (model.models) {
+        model.forEach(createItemView);
+    } else {
+        createItemView(model);
+    }
+});
 
-allItemsCollection.on('add', createItemView);
 
 var $textarea = $('textarea');
 
 $textarea.focus();
 
+var returnKey = 13;
+
 $textarea.on('keyup', function(e) {
-    if (e.which === 13) {
+    if (e.which === returnKey) {
         var newItem = $textarea.val().trim();
-        allItemsCollection.add({
+        allItemsCollection.create({
             item: newItem
         });
         $textarea.val('');
